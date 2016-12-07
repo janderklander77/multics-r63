@@ -17,6 +17,14 @@ ifeq ($(target),x64)
   CFLAGS	= -s -ggdb3 -m64 -O2 -I. -DTARGET=1 $(OPTS)
   LFLAGS	= $(CFLAGS)
 else
+ifeq ($(target),raspberrypi)
+  CC	   = gcc
+  CXX       = g++
+  STRIP     = strip
+  OUTPUT        = raspberrypi/
+  CFLAGS        = -s -ggdb3 -O2 -I. -DTARGET=1 $(OPTS)
+  LFLAGS        = $(CFLAGS)
+else
 ifeq ($(target),ppc-old)
   CC        = powerpc-tuxbox-linux-gnu-gcc
   CXX       = powerpc-tuxbox-linux-gnu-g++
@@ -79,6 +87,7 @@ endif
 endif
 endif
 endif
+endif
 
 ifndef name
 	AOUT	= $(OUTPUT)multics
@@ -94,7 +103,7 @@ OBJECTS = $(OUTPUT)sha1.o $(OUTPUT)des.o $(OUTPUT)md5.o $(OUTPUT)convert.o $(OUT
 link: main.c $(OBJECTS)
 	$(CC) $(LFLAGS) -o $(AOUT) $(OBJECTS) -lpthread
 
-%.o: ../%.c Makefile common.h httpserver.h config.h
+$(OUTPUT)%.o: %.c Makefile common.h httpserver.h config.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 clean:
@@ -108,4 +117,5 @@ cleanall:
 	$(MAKE) target=ppc-old clean
 	$(MAKE) target=mips clean
 	$(MAKE) target=sh4 clean
+	$(MAKE) target=raspberrypi clean
 

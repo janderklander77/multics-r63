@@ -7,6 +7,8 @@
 #define HTTP_GET  0
 #define HTTP_POST 1
 
+#define MAXHEADERS 20
+
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -64,11 +66,11 @@ typedef struct
 	int http_version;//(0:1.0,1:1.1)
 	char Host[100];//(localhost:9999)
 	int Connection;//(1:keep-alive, 0:close);
-	http_get getlist[20];
+	http_get getlist[MAXHEADERS];
 	int getcount;
-	http_get postlist[20];
+	http_get postlist[MAXHEADERS];
 	int postcount;
-	http_get headers[20];
+	http_get headers[MAXHEADERS];
 	int hdrcount;
 
 } http_request;
@@ -153,7 +155,7 @@ void explode_post(http_request *req, char *post)
   char *end,*a;
   int i;
   i=0;
-  while ( (end=strchr(post, '&')) ) 
+  while ( (end=strchr(post, '&')) && i<MAXHEADERS ) 
   {
 	*end = '\0';
 	if ( (a=strchr(post, '=')) ) {
@@ -165,7 +167,7 @@ void explode_post(http_request *req, char *post)
 	}
 	post=end+1;
   }
-  if ( (a=strchr(post, '=')) ) {
+  if ( (a=strchr(post, '=')) && i<MAXHEADERS) {
     *a='\0';
     strncpy(req->postlist[i].name,post,255);
     strncpy(req->postlist[i].value,a+1,255);
@@ -211,7 +213,7 @@ int extractreq(http_request *req, char *buffer, int len )
 	while ( (*path_start!='\r')&&(*path_start!='\n') ) path_start++;
 	if (*path_start=='\r') path_start++;
 	if (*path_start=='\n') path_start++;
-	while ( path_start<rnrn ) {
+	while ( path_start<rnrn && req->hdrcount<MAXHEADERS ) {
 		// start = path_start
 		//get end of line
 		path_end = path_start;
